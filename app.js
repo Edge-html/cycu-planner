@@ -248,6 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnBackToSchedule = document.getElementById('btn-back-to-schedule');
   const planForm = document.getElementById('plan-form');
   const planLocation = document.getElementById('plan-location');
+  const planCategory = document.getElementById('plan-category');
   const planDesc = document.getElementById('plan-desc');
   const planTime = document.getElementById('plan-time');
   const planAuthor = document.getElementById('plan-author');
@@ -508,7 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
         item.innerHTML = `
           <div class="schedule-time">${timeDisplay}</div>
           <div class="schedule-details">
-            <div class="schedule-location">${plan.location}</div>
+            <div class="schedule-location">${plan.location}<span class="category-badge ${plan.category || 'sightseeing'}">${plan.category || 'sightseeing'}</span></div>
             ${plan.desc ? `<div class="schedule-desc">${plan.desc}</div>` : ''}
             <div class="schedule-meta">Suggested by ${plan.author}${plan.lat ? ' &middot; Mapped' : ''}</div>
           </div>
@@ -557,6 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (plan) {
         modalTitle.textContent = 'Edit Plan';
         planLocation.value = plan.location || '';
+        planCategory.value = plan.category || 'sightseeing';
         planDesc.value = plan.desc || '';
         planTime.value = plan.time || '';
         planAuthor.value = plan.author || '';
@@ -572,6 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // New plan
     modalTitle.textContent = 'Suggest a Plan';
     planLocation.value = '';
+    planCategory.value = 'sightseeing';
     planDesc.value = '';
     planTime.value = '';
     planAuthor.value = '';
@@ -626,7 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <td class="td-date">${dateStr}</td>
         <td class="td-day">${dayName}</td>
         <td class="td-time">${to12h(plan.time)}</td>
-        <td class="td-location">${plan.location}</td>
+        <td class="td-location">${plan.location}<span class="category-badge ${plan.category || 'sightseeing'}">${plan.category || 'sightseeing'}</span></td>
         <td class="td-desc">${plan.desc || ''}</td>
         <td class="td-author"><span class="author-badge ${authorClass}">${plan.author}</span></td>
         <td class="td-actions"><button class="td-edit-btn" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button></td>
@@ -693,6 +696,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const planData = {
       id: editingPlanId || Date.now(),
       location,
+      category: planCategory.value,
       desc: planDesc.value.trim(),
       time: planTime.value,
       author: planAuthor.value.trim() || 'Anonymous',
@@ -957,6 +961,52 @@ document.addEventListener('DOMContentLoaded', () => {
     updateMapMarkers();
   }
 
+  function createCustomIcon(category) {
+    let color = '#4D8CD6'; // Default blue
+    let svg = '';
+
+    if (category === 'food') {
+      color = '#EF4444'; // Red-orange for food
+      svg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>`;
+    } else if (category === 'roam') {
+      color = '#F59E0B'; // Amber/orange for roam
+      svg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`;
+    } else if (category === 'sightseeing') {
+      color = '#EC4899'; // Pink/coral for sightseeing
+      svg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
+    } else if (category === 'academic') {
+      color = '#10B981'; // Emerald green for academic
+      svg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>`;
+    } else {
+      color = '#4D8CD6';
+      svg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`;
+    }
+
+    const html = `
+      <div style="
+        background-color: ${color};
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        ${svg}
+      </div>
+    `;
+
+    return L.divIcon({
+      html: html,
+      className: 'custom-map-pin',
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      popupAnchor: [0, -16]
+    });
+  }
+
   function updateMapMarkers() {
     // Clear old markers
     markers.forEach(m => map.removeLayer(m));
@@ -972,15 +1022,8 @@ document.addEventListener('DOMContentLoaded', () => {
           const dateStr = formatDateDisplay(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
           const timeStr = plan.time ? ` at ${to12h(plan.time)}` : '';
 
-          const markerColor = plan.author === 'Camp Coordinator' ? '#3E8E4F' : (plan.author === 'Ian' ? '#F28E73' : '#4D8CD6');
-
-          const marker = L.circleMarker([plan.lat, plan.lng], {
-            radius: 8,
-            fillColor: markerColor,
-            color: '#ffffff',
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.95
+          const marker = L.marker([plan.lat, plan.lng], {
+            icon: createCustomIcon(plan.category)
           }).addTo(map);
 
           marker.bindPopup(`

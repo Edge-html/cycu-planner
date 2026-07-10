@@ -623,6 +623,7 @@ body {
 
 #plan-form input[type="text"],
 #plan-form input[type="time"],
+#plan-form select,
 #plan-form textarea {
   width: 100%;
   background: #121A24;
@@ -636,6 +637,7 @@ body {
   transition: var(--transition-fast);
 }
 #plan-form input:focus,
+#plan-form select:focus,
 #plan-form textarea:focus {
   border-color: var(--brand-secondary);
   background: #141D29;
@@ -1110,4 +1112,35 @@ body {
     width: 48px;
     font-size: 0.78rem;
   }
+}
+
+.category-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  font-weight: 700;
+  vertical-align: middle;
+  text-transform: uppercase;
+}
+.category-badge.food {
+  background: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.category-badge.roam {
+  background: rgba(245, 158, 11, 0.15);
+  color: #F59E0B;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.category-badge.sightseeing {
+  background: rgba(236, 72, 153, 0.15);
+  color: #EC4899;
+  border: 1px solid rgba(236, 72, 153, 0.3);
+}
+.category-badge.academic {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
