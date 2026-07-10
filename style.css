@@ -664,6 +664,172 @@ body {
 .geocode-status.success { color: var(--brand-primary); }
 .geocode-status.error { color: #F87171; }
 
+/* Pin on map button & status */
+.pin-map-row {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.btn-pin-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  border: 1.5px dashed rgba(77, 140, 214, 0.3);
+  color: var(--brand-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.btn-pin-location:hover {
+  background: rgba(77, 140, 214, 0.06);
+  border-color: var(--brand-secondary);
+}
+.btn-pin-location.active {
+  background: rgba(242, 142, 115, 0.12);
+  border-color: var(--brand-accent);
+  border-style: solid;
+  color: var(--brand-accent);
+  box-shadow: 0 0 12px rgba(242, 142, 115, 0.15);
+}
+
+.pin-coords {
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  background: #121A24;
+  border: 1px dashed var(--border-light);
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
+  flex: 1;
+  min-width: 120px;
+}
+.pin-coords.has-pin {
+  color: var(--brand-secondary);
+  border-color: rgba(77, 140, 214, 0.3);
+  border-style: solid;
+}
+
+.pin-status {
+  width: 100%;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--brand-accent);
+  min-height: 1.2em;
+}
+.map-click-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 29, 41, 0.9);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 0.4rem 1rem;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  pointer-events: none;
+  z-index: 1000;
+  white-space: nowrap;
+}
+
+/* Pin toggle button */
+.map-toolbar {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+}
+.btn-pin-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #121A24;
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.btn-pin-toggle:hover {
+  background: rgba(77, 140, 214, 0.08);
+  border-color: rgba(77, 140, 214, 0.3);
+  color: var(--brand-secondary);
+}
+.btn-pin-toggle.active {
+  background: rgba(242, 142, 115, 0.12);
+  border-color: var(--brand-accent);
+  color: var(--brand-accent);
+  box-shadow: 0 0 12px rgba(242, 142, 115, 0.15);
+}
+
+/* Pin Map Modal */
+.pin-map-modal-content {
+  background: #141D29;
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  width: 92%;
+  max-width: 700px;
+  height: 85vh;
+  max-height: 600px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+}
+.pin-map-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-light);
+}
+.pin-map-modal-header h3 {
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--brand-secondary);
+}
+.pin-map-container {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+#pin-map-container .leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+.pin-map-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1.5rem;
+  border-top: 1px solid var(--border-light);
+  gap: 1rem;
+}
+.pin-map-coords {
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  flex: 1;
+}
+.pin-map-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;

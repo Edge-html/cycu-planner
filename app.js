@@ -258,12 +258,37 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSavePlan = document.getElementById('btn-save-plan');
   const btnDeletePlan = document.getElementById('btn-delete-plan');
   const mapCount = document.getElementById('map-count');
+  const pinCoords = document.getElementById('pin-coords');
+  // Pin map modal
+  const pinMapModal = document.getElementById('pin-map-modal');
+  const pinMapContainer = document.getElementById('pin-map-container');
+  const btnClosePinMap = document.getElementById('btn-close-pin-map');
+  const btnCancelPinMap = document.getElementById('btn-cancel-pin-map');
+  const btnConfirmPinMap = document.getElementById('btn-confirm-pin-map');
+  const pinMapCoords = document.getElementById('pin-map-coords');
+
+  const btnPinMapLocation = document.getElementById('btn-pin-map-location');
+  const pinStatus = document.getElementById('pin-status');
+  let tempMarker = null;
+  let pinMap = null;
+  let pinMapMarker = null;
+  let pendingLat = null;
+  let pendingLng = null;
   const itineraryBody = document.getElementById('itinerary-body');
   const itineraryCount = document.getElementById('itinerary-count');
   const itineraryEmpty = document.getElementById('itinerary-empty');
   const btnExport = document.getElementById('btn-export');
 
   // Helpers
+  function to12h(time24) {
+    if (!time24) return '--:--';
+    const [h, m] = time24.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return time24;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${String(m).padStart(2, '0')}${ampm}`;
+  }
+
   function startRealtimeSync() {
     console.log("Starting Firestore real-time listener...");
     const plansCol = collection(db, "plans");
@@ -389,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const badgeClass = plan.author === 'Camp Coordinator' ? 'event-badge coordinator' : (plan.author === 'Ian' ? 'event-badge exploration' : 'event-badge other');
           badge.className = badgeClass;
           
-          const timePrefix = plan.time ? `${plan.time} ` : '';
+          const timePrefix = plan.time ? `${to12h(plan.time)} ` : '';
           badge.textContent = `${timePrefix}${plan.location}`;
           badge.title = `${timePrefix}${plan.location} (${plan.author})`;
           
@@ -477,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const item = document.createElement('div');
         item.className = 'schedule-item';
 
-        const timeDisplay = plan.time || '--:--';
+        const timeDisplay = to12h(plan.time);
         
         item.innerHTML = `
           <div class="schedule-time">${timeDisplay}</div>
@@ -524,6 +549,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const datePlans = getPlansForDate(currentModalDate);
 
+    clearPin();
+
     if (planId) {
       const plan = datePlans.find(p => p.id === planId);
       if (plan) {
@@ -536,6 +563,7 @@ document.addEventListener('DOMContentLoaded', () => {
         planLat.value = plan.lat || '';
         planLng.value = plan.lng || '';
         btnDeletePlan.classList.remove('hidden');
+        if (plan.lat && plan.lng) setPin(plan.lat, plan.lng);
         return;
       }
     }
@@ -557,6 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.classList.add('hidden');
     editingDate = null;
     editingPlanId = null;
+    clearPin();
   }
 
   // Itinerary Spreadsheet
@@ -595,7 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
       tr.innerHTML = `
         <td class="td-date">${dateStr}</td>
         <td class="td-day">${dayName}</td>
-        <td class="td-time">${plan.time || '--:--'}</td>
+        <td class="td-time">${to12h(plan.time)}</td>
         <td class="td-location">${plan.location}</td>
         <td class="td-desc">${plan.desc || ''}</td>
         <td class="td-author"><span class="author-badge ${authorClass}">${plan.author}</span></td>
@@ -613,6 +642,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
       itineraryBody.appendChild(tr);
     });
+  }
+
+  // Auto-geocode a location name
+  async function autoGeocode(locationName) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName + ', Taiwan')}&limit=1`;
+      const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+      const data = await res.json();
+      if (data && data.length > 0) {
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), address: data[0].display_name };
+      }
+    } catch {}
+    return null;
   }
 
   // Save plan
@@ -633,6 +675,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const datePlans = plans[editingDate] || [];
+    let lat = planLat.value ? parseFloat(planLat.value) : null;
+    let lng = planLng.value ? parseFloat(planLng.value) : null;
+    let address = planAddress.value.trim();
+
+    // Auto-geocode if no coordinates set
+    if (!lat || !lng) {
+      const geo = await autoGeocode(location);
+      if (geo) {
+        lat = geo.lat;
+        lng = geo.lng;
+        address = address || geo.address;
+      }
+    }
 
     const planData = {
       id: editingPlanId || Date.now(),
@@ -640,9 +695,9 @@ document.addEventListener('DOMContentLoaded', () => {
       desc: planDesc.value.trim(),
       time: planTime.value,
       author: planAuthor.value.trim() || 'Anonymous',
-      address: planAddress.value.trim(),
-      lat: planLat.value ? parseFloat(planLat.value) : null,
-      lng: planLng.value ? parseFloat(planLng.value) : null,
+      address,
+      lat,
+      lng,
       createdAt: editingPlanId ? (datePlans.find(p => p.id === editingPlanId)?.createdAt || Date.now()) : Date.now()
     };
 
@@ -710,6 +765,11 @@ document.addEventListener('DOMContentLoaded', () => {
     deletePlanById(editingPlanId);
   }
 
+  // Detect Plus Code prefix (e.g. "X64Q+PR", "7JQ2+8C")
+  function isPlusCode(text) {
+    return /^[23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,}/i.test(text.trim().split(/\s+/)[0]);
+  }
+
   // Geocode
   async function geocodeAddress() {
     const addr = planAddress.value.trim();
@@ -718,6 +778,26 @@ document.addEventListener('DOMContentLoaded', () => {
     geocodeStatus.textContent = 'Searching...';
     geocodeStatus.className = 'geocode-status';
 
+    // Try client-side Plus Code decoding first
+    if (isPlusCode(addr)) {
+      try {
+        const codeOnly = addr.split(/\s+/)[0].toUpperCase();
+        const decoded = OpenLocationCode.decode(codeOnly);
+        if (decoded) {
+          const lat = decoded.latitudeCenter;
+          const lng = decoded.longitudeCenter;
+          planAddress.value = codeOnly + (addr.slice(codeOnly.length) || '');
+          setPin(lat, lng);
+          geocodeStatus.textContent = 'Pinned from Plus Code';
+          geocodeStatus.className = 'geocode-status success';
+          return;
+        }
+      } catch (e) {
+        // Fall through to Nominatim
+      }
+    }
+
+    // Fallback: Nominatim search
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
 
@@ -728,19 +808,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (data && data.length > 0) {
         const result = data[0];
-        planLat.value = parseFloat(result.lat);
-        planLng.value = parseFloat(result.lon);
+        const lat = parseFloat(result.lat);
+        const lng = parseFloat(result.lon);
         planAddress.value = result.display_name;
-        geocodeStatus.textContent = `Found: ${result.display_name}`;
+        setPin(lat, lng);
+        geocodeStatus.textContent = 'Found';
         geocodeStatus.className = 'geocode-status success';
       } else {
-        geocodeStatus.textContent = 'Location not found. Try a different address.';
+        geocodeStatus.textContent = 'Location not found';
         geocodeStatus.className = 'geocode-status error';
-        planLat.value = '';
-        planLng.value = '';
+        clearPin();
       }
     } catch {
-      geocodeStatus.textContent = 'Search timed out or failed. Try again.';
+      geocodeStatus.textContent = 'Search timed out';
       geocodeStatus.className = 'geocode-status error';
     } finally {
       clearTimeout(timeout);
@@ -748,6 +828,106 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Map
+  function setPin(lat, lng) {
+    planLat.value = lat;
+    planLng.value = lng;
+    pinCoords.textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    pinCoords.className = 'pin-coords has-pin';
+    pinStatus.textContent = 'Location pinned';
+    resetPinButton();
+    if (tempMarker) map.removeLayer(tempMarker);
+    tempMarker = L.circleMarker([lat, lng], {
+      radius: 10, fillColor: '#F28E73', color: '#fff', weight: 3, fillOpacity: 1
+    }).addTo(map).bindPopup(`<b>Pinned</b><br>${lat.toFixed(5)}, ${lng.toFixed(5)}`).openPopup();
+  }
+
+  function resetPinButton() {
+    btnPinMapLocation.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg> Pin Map Location';
+  }
+
+  function clearPin() {
+    planLat.value = '';
+    planLng.value = '';
+    pinCoords.textContent = 'No pin set';
+    pinCoords.className = 'pin-coords';
+    pinStatus.textContent = '';
+    resetPinButton();
+    if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
+  }
+
+  // Pin map modal
+  function openPinMap() {
+    pinMapModal.classList.remove('hidden');
+    pinMapCoords.textContent = 'Click the map to drop a pin';
+    btnConfirmPinMap.disabled = true;
+    pendingLat = null;
+    pendingLng = null;
+
+    if (planLat.value && planLng.value) {
+      pendingLat = parseFloat(planLat.value);
+      pendingLng = parseFloat(planLng.value);
+    }
+
+    // Small delay to let the modal render, then init map
+    setTimeout(() => {
+      if (pinMap) pinMap.remove();
+      pinMap = L.map('pin-map-container', {
+        center: [pendingLat || 24.96, pendingLng || 121.23],
+        zoom: pendingLat ? 15 : 11,
+        zoomControl: true,
+        attributionControl: false
+      });
+
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+      }).addTo(pinMap);
+
+      if (pendingLat && pendingLng) {
+        pinMapMarker = L.marker([pendingLat, pendingLng], { draggable: true }).addTo(pinMap);
+        pinMapCoords.textContent = `${pendingLat.toFixed(5)}, ${pendingLng.toFixed(5)}`;
+        btnConfirmPinMap.disabled = false;
+        pinMapMarker.on('dragend', function () {
+          const pos = pinMapMarker.getLatLng();
+          pendingLat = pos.lat;
+          pendingLng = pos.lng;
+          pinMapCoords.textContent = `${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)}`;
+        });
+      }
+
+      pinMap.on('click', function (e) {
+        if (pinMapMarker) pinMap.removeLayer(pinMapMarker);
+        pendingLat = e.latlng.lat;
+        pendingLng = e.latlng.lng;
+        pinMapMarker = L.marker([pendingLat, pendingLng], { draggable: true }).addTo(pinMap);
+        pinMapCoords.textContent = `${pendingLat.toFixed(5)}, ${pendingLng.toFixed(5)}`;
+        btnConfirmPinMap.disabled = false;
+        pinMapMarker.on('dragend', function () {
+          const pos = pinMapMarker.getLatLng();
+          pendingLat = pos.lat;
+          pendingLng = pos.lng;
+          pinMapCoords.textContent = `${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)}`;
+        });
+      });
+
+      pinMap.invalidateSize();
+    }, 200);
+  }
+
+  function closePinMap() {
+    pinMapModal.classList.add('hidden');
+    if (pinMap) { pinMap.remove(); pinMap = null; }
+    pinMapMarker = null;
+    pendingLat = null;
+    pendingLng = null;
+  }
+
+  function confirmPin() {
+    if (pendingLat !== null && pendingLng !== null) {
+      setPin(pendingLat, pendingLng);
+    }
+    closePinMap();
+  }
+
   function initMap() {
     map = L.map('real-map', {
       center: [24.96, 121.23],
@@ -761,19 +941,11 @@ document.addEventListener('DOMContentLoaded', () => {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    // Invalidate map size on window resize for responsiveness
     window.addEventListener('resize', () => {
-      if (map) {
-        map.invalidateSize();
-      }
+      if (map) map.invalidateSize();
     });
 
-    // Call invalidate size after a brief delay to ensure container dimensions are calculated
-    setTimeout(() => {
-      if (map) {
-        map.invalidateSize();
-      }
-    }, 150);
+    setTimeout(() => { if (map) map.invalidateSize(); }, 150);
 
     updateMapMarkers();
   }
@@ -791,7 +963,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (plan.lat && plan.lng) {
           const parts = dateKey.split('-');
           const dateStr = formatDateDisplay(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-          const timeStr = plan.time ? ` at ${plan.time}` : '';
+          const timeStr = plan.time ? ` at ${to12h(plan.time)}` : '';
 
           const markerColor = plan.author === 'Camp Coordinator' ? '#3E8E4F' : (plan.author === 'Ian' ? '#F28E73' : '#4D8CD6');
 
@@ -857,46 +1029,58 @@ document.addEventListener('DOMContentLoaded', () => {
   btnGeocode.addEventListener('click', geocodeAddress);
   planAddress.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); geocodeAddress(); } });
 
+  // Pin on map button
+  btnPinMapLocation.addEventListener('click', () => {
+    openPinMap();
+  });
+
+  // Pin map modal events
+  btnClosePinMap.addEventListener('click', closePinMap);
+  btnCancelPinMap.addEventListener('click', closePinMap);
+  btnConfirmPinMap.addEventListener('click', confirmPin);
+  pinMapModal.addEventListener('click', (e) => { if (e.target === pinMapModal) closePinMap(); });
+
   // Export handler
-  btnExport.addEventListener('click', () => {
-    const allPlans = [];
-    Object.keys(plans).forEach(dateKey => {
-      (plans[dateKey] || []).forEach(p => allPlans.push({ date: dateKey, ...p }));
-    });
-    allPlans.sort((a, b) => a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || ''));
+  btnExport.addEventListener('click', function (e) {
+    e.preventDefault();
+    try {
+      const allPlans = [];
+      Object.keys(plans).forEach(dateKey => {
+        (plans[dateKey] || []).forEach(p => allPlans.push({ date: dateKey, ...p }));
+      });
+      allPlans.sort((a, b) => a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || ''));
 
-    const escapeCsv = (v) => {
-      const s = (v || '').replace(/"/g, '""');
-      return `"${s}"`;
-    };
-    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const esc = (v) => {
+        const s = (v === null || v === undefined ? '' : String(v)).replace(/"/g, '""');
+        return '"' + s + '"';
+      };
+      const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-    const headers = ['Date','Day','Time','Location','Description','Address','Latitude','Longitude','Suggested By'];
-    const rows = allPlans.map(p => {
-      const parts = p.date.split('-');
-      const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-      const day = dayNames[d.getDay()];
-      return [
-        p.date,
-        day,
-        p.time || '--:--',
-        p.location,
-        p.desc || '',
-        p.address || '',
-        p.lat ?? '',
-        p.lng ?? '',
-        p.author || 'Anonymous'
-      ].map(escapeCsv).join(',');
-    });
+      const h = ['Date','Day','Time','Location','Description','Address','Latitude','Longitude','Suggested By'];
+      const r = allPlans.map(p => {
+        const parts = p.date.split('-');
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        return [
+          p.date, days[d.getDay()], p.time || '--:--',
+          p.location, p.desc || '', p.address || '',
+          p.lat ?? '', p.lng ?? '', p.author || 'Anonymous'
+        ].map(esc).join(',');
+      });
 
-    const bom = '\uFEFF';
-    const csv = bom + headers.join(',') + '\n' + rows.join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'itinerary.csv';
-    a.click();
-    URL.revokeObjectURL(a.href);
+      const csv = '\uFEFF' + h.join(',') + '\n' + r.join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'itinerary.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 100);
+    } catch (err) {
+      console.error('Export failed:', err);
+      alert('Export failed. Check the console for details.');
+    }
   });
 
   // Init
