@@ -864,11 +864,37 @@ document.addEventListener('DOMContentLoaded', () => {
       (plans[dateKey] || []).forEach(p => allPlans.push({ date: dateKey, ...p }));
     });
     allPlans.sort((a, b) => a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || ''));
-    const txt = allPlans.map(p => `${p.date} ${p.time||'--:--'} | ${p.location} | ${p.desc||'-'} | ${p.author}`).join('\n');
-    const blob = new Blob([txt], { type: 'text/plain' });
+
+    const escapeCsv = (v) => {
+      const s = (v || '').replace(/"/g, '""');
+      return `"${s}"`;
+    };
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    const headers = ['Date','Day','Time','Location','Description','Address','Latitude','Longitude','Suggested By'];
+    const rows = allPlans.map(p => {
+      const parts = p.date.split('-');
+      const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      const day = dayNames[d.getDay()];
+      return [
+        p.date,
+        day,
+        p.time || '--:--',
+        p.location,
+        p.desc || '',
+        p.address || '',
+        p.lat ?? '',
+        p.lng ?? '',
+        p.author || 'Anonymous'
+      ].map(escapeCsv).join(',');
+    });
+
+    const bom = '\uFEFF';
+    const csv = bom + headers.join(',') + '\n' + rows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'itinerary.txt';
+    a.download = 'itinerary.csv';
     a.click();
     URL.revokeObjectURL(a.href);
   });
