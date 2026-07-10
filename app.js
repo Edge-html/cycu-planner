@@ -879,7 +879,7 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: false
       });
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         maxZoom: 19,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
       }).addTo(pinMap);
@@ -938,7 +938,7 @@ document.addEventListener('DOMContentLoaded', () => {
       attributionControl: false
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
     }).addTo(map);
@@ -1037,6 +1037,13 @@ document.addEventListener('DOMContentLoaded', () => {
   btnDeletePlan.addEventListener('click', deletePlan);
   btnGeocode.addEventListener('click', geocodeAddress);
   planAddress.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); geocodeAddress(); } });
+  planAddress.addEventListener('paste', () => { setTimeout(geocodeAddress, 100); });
+  planAddress.addEventListener('change', geocodeAddress);
+  let geocodeTimeout = null;
+  planAddress.addEventListener('input', () => {
+    if (geocodeTimeout) clearTimeout(geocodeTimeout);
+    geocodeTimeout = setTimeout(geocodeAddress, 800);
+  });
 
   // Pin on map button
   btnPinMapLocation.addEventListener('click', () => {
