@@ -768,7 +768,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Detect Plus Code prefix (e.g. "X64Q+PR", "7JQ2+8C")
   function isPlusCode(text) {
-    return /^[23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,}/i.test(text.trim().split(/\s+/)[0]);
+    const firstToken = text.trim().split(/\s+/)[0].replace(/[,;:]+$/, '');
+    return /^[23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,}/i.test(firstToken);
   }
 
   // Geocode
@@ -782,19 +783,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Try client-side Plus Code decoding first
     if (isPlusCode(addr)) {
       try {
-        const codeOnly = addr.split(/\s+/)[0].toUpperCase();
+        let codeOnly = addr.split(/\s+/)[0].replace(/[,;:]+$/, '').toUpperCase();
+        if (OpenLocationCode.isShort(codeOnly)) {
+          // Recover full code using CYCU coordinates [24.9576, 121.2407] as reference
+          codeOnly = OpenLocationCode.recoverNearest(codeOnly, 24.9576, 121.2407);
+        }
         const decoded = OpenLocationCode.decode(codeOnly);
         if (decoded) {
           const lat = decoded.latitudeCenter;
           const lng = decoded.longitudeCenter;
-          planAddress.value = codeOnly + (addr.slice(codeOnly.length) || '');
+          planAddress.value = codeOnly + (addr.slice(addr.split(/\s+/)[0].length) || '');
           setPin(lat, lng);
           geocodeStatus.textContent = 'Pinned from Plus Code';
           geocodeStatus.className = 'geocode-status success';
           return;
         }
       } catch (e) {
-        // Fall through to Nominatim
+        console.error("Plus Code decoding error, falling back:", e);
       }
     }
 
