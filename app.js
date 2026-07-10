@@ -228,6 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Map
   let map = null;
   let markers = [];
+  let isInitialLoad = true;
 
   // DOM refs
   const calendarGrid = document.getElementById('calendar-grid');
@@ -872,14 +873,15 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       if (pinMap) pinMap.remove();
       pinMap = L.map('pin-map-container', {
-        center: [pendingLat || 24.96, pendingLng || 121.23],
-        zoom: pendingLat ? 15 : 11,
+        center: [pendingLat || 24.9576, pendingLng || 121.2407],
+        zoom: 16,
         zoomControl: true,
         attributionControl: false
       });
 
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
       }).addTo(pinMap);
 
       if (pendingLat && pendingLng) {
@@ -930,15 +932,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function initMap() {
     map = L.map('real-map', {
-      center: [24.96, 121.23],
-      zoom: 11,
+      center: [24.9576, 121.2407],
+      zoom: 16,
       zoomControl: true,
       attributionControl: false
     });
 
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
     }).addTo(map);
 
     window.addEventListener('resize', () => {
@@ -992,8 +994,15 @@ document.addEventListener('DOMContentLoaded', () => {
     mapCount.textContent = `${count} location${count !== 1 ? 's' : ''}`;
 
     if (count > 0) {
-      const group = L.featureGroup(markers);
-      map.fitBounds(group.getBounds().pad(0.15));
+      if (isInitialLoad) {
+        map.setView([24.9576, 121.2407], 16);
+        isInitialLoad = false;
+      } else {
+        const group = L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.15));
+      }
+    } else {
+      map.setView([24.9576, 121.2407], 16);
     }
   }
 
