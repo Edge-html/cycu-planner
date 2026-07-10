@@ -258,6 +258,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSavePlan = document.getElementById('btn-save-plan');
   const btnDeletePlan = document.getElementById('btn-delete-plan');
   const mapCount = document.getElementById('map-count');
+  const itineraryBody = document.getElementById('itinerary-body');
+  const itineraryCount = document.getElementById('itinerary-count');
+  const itineraryEmpty = document.getElementById('itinerary-empty');
+  const btnExport = document.getElementById('btn-export');
 
   // Helpers
   function startRealtimeSync() {
@@ -285,6 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
         plans = newPlans;
       }
       renderCalendar();
+      renderItinerary();
       updateMapMarkers();
       
       // If modal schedule view is currently open, refresh it dynamically
@@ -554,6 +559,62 @@ document.addEventListener('DOMContentLoaded', () => {
     editingPlanId = null;
   }
 
+  // Itinerary Spreadsheet
+  function renderItinerary() {
+    const rows = [];
+    Object.keys(plans).forEach(dateKey => {
+      const datePlans = plans[dateKey];
+      if (!datePlans || !datePlans.length) return;
+      datePlans.forEach(plan => {
+        rows.push({ ...plan, dateKey });
+      });
+    });
+
+    rows.sort((a, b) => a.dateKey.localeCompare(b.dateKey) || (a.time || '').localeCompare(b.time || ''));
+
+    itineraryBody.innerHTML = '';
+    itineraryCount.textContent = `${rows.length} entries`;
+
+    if (rows.length === 0) {
+      itineraryEmpty.classList.remove('hidden');
+      return;
+    }
+    itineraryEmpty.classList.add('hidden');
+
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    rows.forEach(plan => {
+      const parts = plan.dateKey.split('-');
+      const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      const dayName = dayNames[d.getDay()];
+      const dateStr = `${parts[1]}/${parts[2]}`;
+
+      const authorClass = plan.author === 'Camp Coordinator' ? 'coordinator' : (plan.author === 'Ian' ? 'exploration' : 'other');
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="td-date">${dateStr}</td>
+        <td class="td-day">${dayName}</td>
+        <td class="td-time">${plan.time || '--:--'}</td>
+        <td class="td-location">${plan.location}</td>
+        <td class="td-desc">${plan.desc || ''}</td>
+        <td class="td-author"><span class="author-badge ${authorClass}">${plan.author}</span></td>
+        <td class="td-actions"><button class="td-edit-btn" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button></td>
+      `;
+
+      tr.addEventListener('click', (e) => {
+        if (e.target.closest('.td-edit-btn')) return;
+        openPlanModal(plan.dateKey, plan.id);
+      });
+      tr.querySelector('.td-edit-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        openPlanModal(plan.dateKey, plan.id);
+      });
+
+      itineraryBody.appendChild(tr);
+    });
+  }
+
   // Save plan
   async function savePlan(e) {
     console.log("savePlan entered! Event:", e);
@@ -732,10 +793,12 @@ document.addEventListener('DOMContentLoaded', () => {
           const dateStr = formatDateDisplay(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
           const timeStr = plan.time ? ` at ${plan.time}` : '';
 
+          const markerColor = plan.author === 'Camp Coordinator' ? '#3E8E4F' : (plan.author === 'Ian' ? '#F28E73' : '#4D8CD6');
+
           const marker = L.circleMarker([plan.lat, plan.lng], {
             radius: 8,
-            fillColor: '#f7931a',
-            color: '#fff',
+            fillColor: markerColor,
+            color: '#ffffff',
             weight: 2,
             opacity: 1,
             fillOpacity: 0.95
@@ -793,6 +856,22 @@ document.addEventListener('DOMContentLoaded', () => {
   btnDeletePlan.addEventListener('click', deletePlan);
   btnGeocode.addEventListener('click', geocodeAddress);
   planAddress.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); geocodeAddress(); } });
+
+  // Export handler
+  btnExport.addEventListener('click', () => {
+    const allPlans = [];
+    Object.keys(plans).forEach(dateKey => {
+      (plans[dateKey] || []).forEach(p => allPlans.push({ date: dateKey, ...p }));
+    });
+    allPlans.sort((a, b) => a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || ''));
+    const txt = allPlans.map(p => `${p.date} ${p.time||'--:--'} | ${p.location} | ${p.desc||'-'} | ${p.author}`).join('\n');
+    const blob = new Blob([txt], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'itinerary.txt';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
 
   // Init
   initMap();

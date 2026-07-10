@@ -6,7 +6,7 @@
   <title>CYCU Trip Planner - Calendar & Map</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <link rel="stylesheet" href="style.css">
   <script type="importmap">
@@ -19,9 +19,6 @@
   </script>
 </head>
 <body>
-  <div class="glow-orb orb-1"></div>
-  <div class="glow-orb orb-2"></div>
-  <div class="glow-orb orb-3"></div>
 
   <div class="app-container">
     <header class="app-header">
@@ -61,6 +58,36 @@
         <div id="real-map" class="real-map"></div>
       </section>
     </div>
+
+    <!-- Spreadsheet Itinerary -->
+    <section class="itinerary-section">
+      <div class="itinerary-header">
+        <div class="itinerary-header-left">
+          <h3>Itinerary</h3>
+          <span class="itinerary-count" id="itinerary-count">0 entries</span>
+        </div>
+        <div class="itinerary-header-right">
+          <button id="btn-export" class="btn-text">Export</button>
+        </div>
+      </div>
+      <div class="itinerary-table-wrap">
+        <table class="itinerary-table">
+          <thead>
+            <tr>
+              <th class="col-date">Date</th>
+              <th class="col-day">Day</th>
+              <th class="col-time">Time</th>
+              <th class="col-location">Location</th>
+              <th class="col-desc">Description</th>
+              <th class="col-author">By</th>
+              <th class="col-actions"></th>
+            </tr>
+          </thead>
+          <tbody id="itinerary-body"></tbody>
+        </table>
+      </div>
+      <p class="itinerary-empty" id="itinerary-empty">No plans yet. Click a date on the calendar to add one.</p>
+    </section>
   </div>
 
   <!-- Plan Editor Modal -->
