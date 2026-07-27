@@ -23,7 +23,13 @@
   <div class="app-container">
     <header class="app-header">
       <div class="header-main">
-        <div class="header-badge">CYCU Summer Camp 2026</div>
+        <div class="header-top-row">
+          <div class="header-badge">CYCU Summer Camp 2026</div>
+          <button id="btn-open-ai-header" class="btn-ai-header" title="Open AI Travel & Transit Assistant">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 12L2.5 7.5"/><path d="m12 12 8.5 4.5"/><path d="m12 12-4.5 8.5"/></svg>
+            <span>🤖 AI Travel Assistant</span>
+          </button>
+        </div>
         <h1 class="header-title">Trip Planning Calendar</h1>
         <p class="header-subtitle">Suggest weekend spots, map locations, and coordinate activities for our CYCU Summer Camp cohort.</p>
       </div>
@@ -190,6 +196,167 @@
         <div class="pin-map-actions">
           <button type="button" id="btn-cancel-pin-map" class="btn-text">Cancel</button>
           <button type="button" id="btn-confirm-pin-map" class="btn-primary" disabled>Confirm Pin</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating AI Assistant Button -->
+  <button id="btn-floating-ai" class="btn-floating-ai" title="Ask AI Travel Assistant">
+    <div class="ai-fab-icon">🤖</div>
+    <span class="ai-fab-text">AI Assistant</span>
+    <span class="ai-fab-ping"></span>
+  </button>
+
+  <!-- AI Travel Assistant Modal -->
+  <div id="ai-assistant-modal" class="modal-overlay hidden">
+    <div class="ai-modal-content">
+      <div class="ai-modal-header">
+        <div class="ai-modal-title-group">
+          <div class="ai-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+            CYCU Taiwan AI Guide
+          </div>
+          <h2>AI Travel & Transit Assistant</h2>
+          <p class="ai-subtitle">Ask where to ride buses/trains, fares, entrance fees, and see place photos across Taiwan!</p>
+        </div>
+        <button id="btn-close-ai-modal" class="modal-close" aria-label="Close AI Assistant">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="ai-modal-body">
+        <!-- AI Search Box -->
+        <form id="ai-search-form" class="ai-search-box">
+          <div class="ai-search-input-wrap">
+            <svg class="ai-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="ai-query-input" placeholder="e.g. How do I get to Jiufen Old Street and how much does it cost?" required>
+            <button type="submit" id="btn-ai-search" class="btn-primary btn-ai-submit">
+              <span>Ask AI</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </form>
+
+        <!-- Quick Destination Presets -->
+        <div class="ai-presets-container">
+          <span class="ai-presets-label">Popular Weekend Destinations from CYCU:</span>
+          <div class="ai-preset-chips" id="ai-preset-chips">
+            <button type="button" class="ai-chip" data-dest="elephant-mountain">🧗 Elephant Mountain (Taipei)</button>
+            <button type="button" class="ai-chip" data-dest="jiufen">🏮 Jiufen Old Street</button>
+            <button type="button" class="ai-chip" data-dest="taipei-101">🗼 Taipei 101 Observatory</button>
+            <button type="button" class="ai-chip" data-dest="daxi">🧱 Daxi Old Street</button>
+            <button type="button" class="ai-chip" data-dest="xpark">🐠 Xpark Aquarium (Taoyuan)</button>
+            <button type="button" class="ai-chip" data-dest="hutoushan">🏞️ Hutoushan Sunset Park</button>
+            <button type="button" class="ai-chip" data-dest="zhongli-night-market">🍢 Zhongli Night Market</button>
+            <button type="button" class="ai-chip" data-dest="dongyanshan">🌲 Dongyanshan National Forest</button>
+            <button type="button" class="ai-chip" data-dest="shilin-night-market">🍜 Shilin Night Market</button>
+            <button type="button" class="ai-chip" data-dest="sun-moon-lake">⛵ Sun Moon Lake</button>
+          </div>
+        </div>
+
+        <!-- AI Result Output Panel -->
+        <div id="ai-result-panel" class="ai-result-panel hidden">
+          <!-- Hero Photo Banner -->
+          <div class="ai-hero-card">
+            <img id="ai-place-image" src="" alt="Place picture" class="ai-place-img">
+            <div class="ai-hero-overlay">
+              <div class="ai-hero-header">
+                <span id="ai-place-category" class="ai-place-badge">Sightseeing</span>
+                <span id="ai-place-location-tag" class="ai-place-tag">Taipei City</span>
+              </div>
+              <h3 id="ai-place-title" class="ai-hero-title">Elephant Mountain Skyline Trail</h3>
+              <p id="ai-place-subtitle" class="ai-hero-subtitle">Panoramic skyline views of Taipei 101 and urban hiking trail</p>
+            </div>
+          </div>
+
+          <!-- Expenses Overview Bar -->
+          <div class="ai-expense-bar">
+            <div class="expense-card transit">
+              <div class="expense-icon">🚌</div>
+              <div class="expense-info">
+                <span class="expense-label">Transit Cost</span>
+                <span id="ai-transit-cost" class="expense-value">NT$ 82</span>
+              </div>
+            </div>
+            <div class="expense-card entrance">
+              <div class="expense-icon">🎟️</div>
+              <div class="expense-info">
+                <span class="expense-label">Entrance Fee</span>
+                <span id="ai-entrance-cost" class="expense-value">FREE</span>
+              </div>
+            </div>
+            <div class="expense-card food">
+              <div class="expense-icon">🍱</div>
+              <div class="expense-info">
+                <span class="expense-label">Est. Snacks / Food</span>
+                <span id="ai-food-cost" class="expense-value">~NT$ 200</span>
+              </div>
+            </div>
+            <div class="expense-card total">
+              <div class="expense-icon">💰</div>
+              <div class="expense-info">
+                <span class="expense-label">Est. Total / Person</span>
+                <span id="ai-total-cost" class="expense-value highlight">NT$ 282</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transit Route Guide (Where to ride bus/train & steps) -->
+          <div class="ai-section">
+            <div class="ai-section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+              <h4>Public Transit Guide (From CYCU / Zhongli)</h4>
+            </div>
+            <div id="ai-transit-steps" class="ai-transit-timeline">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+
+          <!-- Useful Place Info & Tips -->
+          <div class="ai-section">
+            <div class="ai-section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <h4>Place Details & Travel Tips</h4>
+            </div>
+            <div class="ai-tips-grid">
+              <div class="tip-card">
+                <span class="tip-title">🕒 Operating Hours</span>
+                <span id="ai-place-hours" class="tip-desc">Open 24 hours (Best at sunset 17:30 - 19:00)</span>
+              </div>
+              <div class="tip-card">
+                <span class="tip-title">💡 Pro-Tip for CYCU Cohort</span>
+                <span id="ai-place-tip" class="tip-desc">Bring water & insect repellent! Steep stone stairs, 20 mins hike to giant boulders.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add to Itinerary Direct Action -->
+          <div class="ai-add-action-box">
+            <div class="ai-add-left">
+              <label for="ai-add-date-select">Add this place to calendar:</label>
+              <select id="ai-add-date-select" class="ai-date-select">
+                <option value="2026-08-01">Sat, Aug 1 - Weekend 1</option>
+                <option value="2026-08-02">Sun, Aug 2 - Weekend 1</option>
+                <option value="2026-08-08">Sat, Aug 8 - Weekend 2</option>
+                <option value="2026-08-09">Sun, Aug 9 - Weekend 2</option>
+                <option value="2026-08-15">Sat, Aug 15 - Weekend 3</option>
+                <option value="2026-08-16">Sun, Aug 16 - Weekend 3</option>
+              </select>
+            </div>
+            <button type="button" id="btn-add-ai-plan" class="btn-primary btn-add-plan">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Add to Itinerary Schedule</span>
+            </button>
+          </div>
+          <div id="ai-add-feedback" class="ai-add-feedback hidden">✓ Successfully added to your itinerary!</div>
+        </div>
+
+        <!-- Initial Placeholder State when opening AI modal -->
+        <div id="ai-placeholder-state" class="ai-placeholder-state">
+          <div class="placeholder-sparkle">✨</div>
+          <h3>Select a destination above or ask any question!</h3>
+          <p>The AI Assistant will instantly outline where to catch the bus/train, exact fares in NT$, entrance fees, and high-resolution place photos.</p>
         </div>
       </div>
     </div>

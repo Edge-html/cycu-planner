@@ -1147,7 +1147,442 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Init
+  // ==========================================================================
+  // AI TRAVEL & TRANSIT ASSISTANT MODULE
+  // ==========================================================================
+  const AI_DESTINATIONS = {
+    'elephant-mountain': {
+      id: 'elephant-mountain',
+      title: 'Elephant Mountain (Xiangshan Trail)',
+      subtitle: 'Iconic Taipei 101 skyline panorama & urban forest hike',
+      category: 'sightseeing',
+      region: 'Taipei City',
+      image: 'https://images.unsplash.com/photo-1543158011-4f02626b96e7?auto=format&fit=crop&w=1000&q=80',
+      lat: 25.0274,
+      lng: 121.5707,
+      address: 'Xiangshan Trail, Xinyi District, Taipei City',
+      transitCost: 'NT$ 82',
+      entranceCost: 'FREE',
+      foodCost: '~NT$ 200',
+      totalCost: 'NT$ 282',
+      steps: [
+        { title: 'CYCU to Zhongli Railway Station', icon: '🚶', desc: 'Walk or take Bus 155/156 from CYCU to Zhongli Station (~10 mins).', fare: 'NT$ 18' },
+        { title: 'TRA Train to Taipei Main Station', icon: '🚆', desc: 'Board TRA Local Express / Tze-Chiang train from Zhongli Station to Taipei Main Station (~40 mins).', fare: 'NT$ 57' },
+        { title: 'Taipei Metro Red Line (Tamsui-Xinyi)', icon: '🚇', desc: 'Transfer to Taipei Metro Red Line bound for Xiangshan. Alight at Xiangshan Station Exit 2 (~18 mins).', fare: 'NT$ 25' },
+        { title: 'Xiangshan Trailhead Hike', icon: '🧗', desc: 'Walk 10 mins through Xiangshan Park to the trail entrance and climb stone steps to the Six Boulders viewpoint.', fare: 'FREE' }
+      ],
+      hours: 'Open 24 hours (Best sunset 17:30 - 19:00)',
+      tip: 'Short steep climb up stone steps. Perfect golden hour sunset view of Taipei 101. Bring water!'
+    },
+    'jiufen': {
+      id: 'jiufen',
+      title: 'Jiufen Old Street & Teahouses',
+      subtitle: 'Atmospheric lantern-lit mountain village overlooking the sea',
+      category: 'sightseeing',
+      region: 'New Taipei City',
+      image: 'https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=1000&q=80',
+      lat: 25.1099,
+      lng: 121.8452,
+      address: 'Jishan Street, Ruifang District, New Taipei City',
+      transitCost: 'NT$ 172',
+      entranceCost: 'FREE',
+      foodCost: '~NT$ 350',
+      totalCost: 'NT$ 522',
+      steps: [
+        { title: 'TRA Train from Zhongli to Ruifang Station', icon: '🚆', desc: 'Board TRA Local Express from Zhongli Station directly to Ruifang Station (~60 mins).', fare: 'NT$ 87' },
+        { title: 'Keelung Bus to Jiufen Old Street', icon: '🚌', desc: 'Outside Ruifang Station, board Keelung Bus 788, 965, or 1062 up the winding mountain road (~15 mins).', fare: 'NT$ 15' },
+        { title: 'Explore Old Street & Teahouses', icon: '🏮', desc: 'Alight at Jiufen Old Street stop and wander down lantern-lit Shuqi Road & Jishan Street.', fare: 'FREE' }
+      ],
+      hours: 'Shops open 10:00 - 20:30 (Best evening views after 18:00)',
+      tip: 'Miyazaki-esque red lanterns light up at dusk. Must try Grandma Lai’s taro balls and visit A-Mei Teahouse!'
+    },
+    'taipei-101': {
+      id: 'taipei-101',
+      title: 'Taipei 101 Observatory',
+      subtitle: 'World-famous 508m skyscraper & 89th floor indoor/outdoor observation deck',
+      category: 'sightseeing',
+      region: 'Taipei City',
+      image: 'https://images.unsplash.com/photo-1508248467877-aed32a209749?auto=format&fit=crop&w=1000&q=80',
+      lat: 25.0339,
+      lng: 121.5645,
+      address: 'No. 7, Section 5, Xinyi Road, Xinyi District, Taipei City',
+      transitCost: 'NT$ 82',
+      entranceCost: 'NT$ 600',
+      foodCost: '~NT$ 400',
+      totalCost: 'NT$ 1,082',
+      steps: [
+        { title: 'Zhongli to Taipei Main Station', icon: '🚆', desc: 'Board TRA Train from Zhongli Station to Taipei Main Station (~40 mins).', fare: 'NT$ 57' },
+        { title: 'Taipei Metro Red Line to Taipei 101', icon: '🚇', desc: 'Take Metro Red Line bound for Xiangshan, exit at Taipei 101 / World Trade Center Station Exit 4 (~15 mins).', fare: 'NT$ 25' },
+        { title: 'High-Speed Elevator to 89F Observatory', icon: '🛗', desc: 'Enter 5th floor ticket counter and ride world’s former fastest elevator (37 seconds) to 89F.', fare: 'NT$ 600' }
+      ],
+      hours: '10:00 - 21:00 daily (Last admission 20:15)',
+      tip: 'Visit Din Tai Fung at B1 for famous xiaolongbao soup dumplings, then inspect the giant 660-tonne wind damper at 88F!'
+    },
+    'daxi': {
+      id: 'daxi',
+      title: 'Daxi Old Street & Baroque Architecture',
+      subtitle: 'Historic Japanese-colonial era carved storefronts & river park',
+      category: 'roam',
+      region: 'Taoyuan City',
+      image: 'https://images.unsplash.com/photo-1571401835393-8c5f35328320?auto=format&fit=crop&w=1000&q=80',
+      lat: 24.8837,
+      lng: 121.2869,
+      address: 'Heping Road, Daxi District, Taoyuan City',
+      transitCost: 'NT$ 36',
+      entranceCost: 'FREE',
+      foodCost: '~NT$ 200',
+      totalCost: 'NT$ 236',
+      steps: [
+        { title: 'Taoyuan Bus 5096 / 5098', icon: '🚌', desc: 'Board Taoyuan Bus 5096 or 5098 from Zhongli Bus Station direct to Daxi Terminal (~35 mins).', fare: 'NT$ 36' },
+        { title: 'Walk through Heping Road Old Street', icon: '🧱', desc: 'Stroll down Heping Road to admire Baroque facade bas-relief carvings, Daxi Park, and river overlook.', fare: 'FREE' }
+      ],
+      hours: 'Shops open 09:00 - 18:00 daily',
+      tip: 'Famous local specialty: Daxi Dried Tofu (Dougan), traditional handmade sticky rice cakes, and refreshing aiyu jelly.'
+    },
+    'xpark': {
+      id: 'xpark',
+      title: 'Xpark Urban Aquarium',
+      subtitle: 'Cutting-edge Japanese immersive aquarium & penguin cafe',
+      category: 'sightseeing',
+      region: 'Taoyuan City (Qingpu)',
+      image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1000&q=80',
+      lat: 25.0172,
+      lng: 121.2166,
+      address: 'No. 105, Chunde Road, Zhongli District, Taoyuan City',
+      transitCost: 'NT$ 36',
+      entranceCost: 'NT$ 600',
+      foodCost: '~NT$ 300',
+      totalCost: 'NT$ 936',
+      steps: [
+        { title: 'Bus 170 / Taoyuan MRT to HSR Station', icon: '🚌', desc: 'Take Bus 170 from Zhongli or MRT to Taoyuan HSR Station (~25 mins).', fare: 'NT$ 36' },
+        { title: 'Walk through Gloria Outlets Footbridge', icon: '🚶', desc: 'Walk 3 mins across the glass footbridge to Xpark entrance inside Landmark Plaza.', fare: 'FREE' },
+        { title: 'Explore 13 Exhibition Zones', icon: '🐠', desc: 'Enjoy 360-degree ocean tank, jellyfish light room, and Xcafe penguin tunnels.', fare: 'NT$ 600' }
+      ],
+      hours: '10:00 - 18:00 (Sun-Fri), 10:00 - 20:00 (Sat)',
+      tip: 'Designed by Yokohama Hakkeijima Sea Paradise. Combine your visit with shopping at Gloria Outlets right next door!'
+    },
+    'hutoushan': {
+      id: 'hutoushan',
+      title: 'Hutoushan Environmental Sunset Park',
+      subtitle: 'Urban forest canopy trail & panoramic evening sunset view over Taoyuan valley',
+      category: 'roam',
+      region: 'Taoyuan District',
+      image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1000&q=80',
+      lat: 24.9984,
+      lng: 121.3278,
+      address: 'Hutoushan Park, Taoyuan District, Taoyuan City',
+      transitCost: 'NT$ 33',
+      entranceCost: 'FREE',
+      foodCost: '~NT$ 200',
+      totalCost: 'NT$ 233',
+      steps: [
+        { title: 'TRA Train to Taoyuan Station', icon: '🚆', desc: 'Board TRA train from Zhongli Station to Taoyuan Station (~10 mins).', fare: 'NT$ 15' },
+        { title: 'Taoyuan Bus 105 to Hutoushan', icon: '🚌', desc: 'Board Bus 105 from Taoyuan Station north exit to Hutoushan Park stop (~15 mins).', fare: 'NT$ 18' },
+        { title: 'Hike to Environmental Park Viewpoint', icon: '🌅', desc: 'Walk up the forested wooden boardwalk to the hill ridge to watch the sunset over Taoyuan.', fare: 'FREE' }
+      ],
+      hours: 'Open 24 hours (Best sunset 17:30 - 19:00)',
+      tip: 'The top local spot for panoramic sunset and stargazing. Head down to Taoyuan Tourist Night Market afterwards!'
+    },
+    'zhongli-night-market': {
+      id: 'zhongli-night-market',
+      title: 'Zhongli Tourist Night Market',
+      subtitle: '700m feast street packed with 400+ savory Taiwan street food stalls',
+      category: 'food',
+      region: 'Zhongli District',
+      image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1000&q=80',
+      lat: 24.9608,
+      lng: 121.2152,
+      address: 'Xinming Road, Zhongli District, Taoyuan City',
+      transitCost: 'NT$ 18',
+      entranceCost: 'FREE',
+      foodCost: '~NT$ 250',
+      totalCost: 'NT$ 268',
+      steps: [
+        { title: 'YouBike / Bus 155 from CYCU', icon: '🚲', desc: 'Ride YouBike (~10 mins) or take Bus 155/156 from CYCU campus to Xinming Road.', fare: 'NT$ 18' },
+        { title: 'Street Food Feast Crawl', icon: '🍢', desc: 'Stroll down Xinming Road street food stalls.', fare: 'FREE' }
+      ],
+      hours: '17:00 - 00:00 daily',
+      tip: 'Must try: Scallion beef rolls, braised pork intestine noodles, clay-oven sesame biscuits, and sweet potato balls!'
+    },
+    'dongyanshan': {
+      id: 'dongyanshan',
+      title: 'Dongyanshan National Forest Recreation Area',
+      subtitle: 'Towering cedar wilderness forest, ancient fossil trails & misty summit views',
+      category: 'roam',
+      region: 'Fuxing District, Taoyuan',
+      image: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1000&q=80',
+      lat: 24.8361,
+      lng: 121.4116,
+      address: 'Dongyanshan, Fuxing District, Taoyuan City',
+      transitCost: 'NT$ 120',
+      entranceCost: 'NT$ 100',
+      foodCost: '~NT$ 150',
+      totalCost: 'NT$ 370',
+      steps: [
+        { title: 'Bus 5096 to Daxi Terminal', icon: '🚌', desc: 'Board Bus 5096 from Zhongli to Daxi Bus Terminal (~35 mins).', fare: 'NT$ 36' },
+        { title: 'Taiwan Tourist Shuttle 506 (Dongyanshan Line)', icon: '🚌', desc: 'Transfer to Shuttle Bus 506 ascending into Fuxing mountain forests (~50 mins).', fare: 'NT$ 84' },
+        { title: 'Cedar Forest Summit Trek', icon: '🌲', desc: 'Hike through misty cedar forest to the 1,212m summit observation deck.', fare: 'NT$ 100' }
+      ],
+      hours: '08:00 - 17:00 (Weekdays), 07:00 - 17:00 (Weekends)',
+      tip: 'Crisp & cool (~20°C). Pack your own trail lunch and water as food options deep inside the mountain are limited.'
+    },
+    'shilin-night-market': {
+      id: 'shilin-night-market',
+      title: 'Shilin Night Market (Taipei)',
+      subtitle: 'Taipei’s most legendary night market with neon arcades & street eats',
+      category: 'food',
+      region: 'Taipei City',
+      image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=1000&q=80',
+      lat: 25.0888,
+      lng: 121.5241,
+      address: 'Jihe Road & Wenlin Road, Shilin District, Taipei City',
+      transitCost: 'NT$ 82',
+      entranceCost: 'FREE',
+      foodCost: '~NT$ 300',
+      totalCost: 'NT$ 382',
+      steps: [
+        { title: 'TRA Train to Taipei Main Station', icon: '🚆', desc: 'Board TRA Local Express from Zhongli Station to Taipei Main Station (~40 mins).', fare: 'NT$ 57' },
+        { title: 'Taipei Metro Red Line to Jiantan Station', icon: '🚇', desc: 'Transfer to Metro Red Line bound for Tamsui, alight at Jiantan Station Exit 1 (~10 mins).', fare: 'NT$ 25' },
+        { title: 'Explore Shilin Food Court & Arcades', icon: '🍗', desc: 'Cross the street into Shilin Night Market for Hot-Star giant fried chicken & oyster omelets.', fare: 'FREE' }
+      ],
+      hours: '16:00 - 00:00 daily',
+      tip: 'Get off at Jiantan Station (Exit 1), NOT Shilin Station, for closest access right into the night market entrance!'
+    },
+    'sun-moon-lake': {
+      id: 'sun-moon-lake',
+      title: 'Sun Moon Lake & Cable Car',
+      subtitle: 'World-famous emerald alpine lake, lakeside cycling & cable car views',
+      category: 'sightseeing',
+      region: 'Nantou County',
+      image: 'https://images.unsplash.com/photo-1527684651001-731c474bbb5a?auto=format&fit=crop&w=1000&q=80',
+      lat: 23.8523,
+      lng: 120.9150,
+      address: 'Shuishe Pier, Yuchi Township, Nantou County',
+      transitCost: 'NT$ 650',
+      entranceCost: 'NT$ 300',
+      foodCost: '~NT$ 300',
+      totalCost: 'NT$ 1,250',
+      steps: [
+        { title: 'MRT / Bus to Taoyuan HSR Station', icon: '🚌', desc: 'Take MRT/Bus from Zhongli to Taoyuan HSR Station (~20 mins).', fare: 'NT$ 36' },
+        { title: 'HSR Bullet Train to Taichung', icon: '🚄', desc: 'Board High Speed Rail from Taoyuan HSR to Taichung HSR Station (~38 mins).', fare: 'NT$ 540' },
+        { title: 'Nantou Bus Express to Sun Moon Lake', icon: '🚌', desc: 'Board Sun Moon Lake Express Bus from Taichung HSR Exit 5 to Shuishe Pier (~80 mins).', fare: 'NT$ 110' },
+        { title: 'Lake Ferry & Cable Car Ride', icon: '⛵', desc: 'Ride lake ferry boats across Shuishe, Xuanguang Pier & take Sun Moon Lake Cable Car.', fare: 'NT$ 300' }
+      ],
+      hours: 'Ferries operate 08:30 - 17:00 daily',
+      tip: 'Rent bicycles at Xiangshang Bike Path (CNN top 10 path). Try famous Assam black tea & herbal tea eggs!'
+    }
+  };
+
+  // AI DOM elements
+  const btnOpenAiHeader = document.getElementById('btn-open-ai-header');
+  const btnFloatingAi = document.getElementById('btn-floating-ai');
+  const aiModal = document.getElementById('ai-assistant-modal');
+  const btnCloseAiModal = document.getElementById('btn-close-ai-modal');
+  const aiSearchForm = document.getElementById('ai-search-form');
+  const aiQueryInput = document.getElementById('ai-query-input');
+  const aiPresetChips = document.getElementById('ai-preset-chips');
+  const aiResultPanel = document.getElementById('ai-result-panel');
+  const aiPlaceholderState = document.getElementById('ai-placeholder-state');
+  
+  // AI Output Elements
+  const aiPlaceImage = document.getElementById('ai-place-image');
+  const aiPlaceCategory = document.getElementById('ai-place-category');
+  const aiPlaceLocationTag = document.getElementById('ai-place-location-tag');
+  const aiPlaceTitle = document.getElementById('ai-place-title');
+  const aiPlaceSubtitle = document.getElementById('ai-place-subtitle');
+  const aiTransitCost = document.getElementById('ai-transit-cost');
+  const aiEntranceCost = document.getElementById('ai-entrance-cost');
+  const aiFoodCost = document.getElementById('ai-food-cost');
+  const aiTotalCost = document.getElementById('ai-total-cost');
+  const aiTransitSteps = document.getElementById('ai-transit-steps');
+  const aiPlaceHours = document.getElementById('ai-place-hours');
+  const aiPlaceTip = document.getElementById('ai-place-tip');
+  const aiAddDateSelect = document.getElementById('ai-add-date-select');
+  const btnAddAiPlan = document.getElementById('btn-add-ai-plan');
+  const aiAddFeedback = document.getElementById('ai-add-feedback');
+
+  let activeAiDestination = null;
+
+  function openAiModal() {
+    aiModal.classList.remove('hidden');
+    if (aiQueryInput) aiQueryInput.focus();
+  }
+
+  function closeAiModal() {
+    aiModal.classList.add('hidden');
+  }
+
+  function renderAiDestination(destKey) {
+    const data = AI_DESTINATIONS[destKey];
+    if (!data) return;
+
+    activeAiDestination = data;
+
+    // Highlight chip
+    const chips = aiPresetChips.querySelectorAll('.ai-chip');
+    chips.forEach(chip => {
+      if (chip.dataset.dest === destKey) {
+        chip.classList.add('active');
+      } else {
+        chip.classList.remove('active');
+      }
+    });
+
+    // Populate data
+    aiPlaceImage.onerror = () => {
+      aiPlaceImage.style.display = 'none';
+      aiPlaceImage.parentElement.style.background = 'linear-gradient(135deg, #1E2D42 0%, #0F172A 100%)';
+    };
+    aiPlaceImage.onload = () => {
+      aiPlaceImage.style.display = 'block';
+    };
+    aiPlaceImage.src = data.image;
+    aiPlaceImage.alt = data.title;
+    aiPlaceCategory.textContent = data.category;
+    aiPlaceCategory.className = `ai-place-badge ${data.category}`;
+    aiPlaceLocationTag.textContent = data.region;
+    aiPlaceTitle.textContent = data.title;
+    aiPlaceSubtitle.textContent = data.subtitle;
+
+    aiTransitCost.textContent = data.transitCost;
+    aiEntranceCost.textContent = data.entranceCost;
+    aiFoodCost.textContent = data.foodCost;
+    aiTotalCost.textContent = data.totalCost;
+
+    // Render transit steps
+    aiTransitSteps.innerHTML = '';
+    data.steps.forEach(step => {
+      const div = document.createElement('div');
+      div.className = 'transit-step';
+      div.innerHTML = `
+        <div class="step-icon-badge">${step.icon}</div>
+        <div class="step-details">
+          <div class="step-header">
+            <span class="step-title">${step.title}</span>
+            <span class="step-fare-badge">${step.fare}</span>
+          </div>
+          <p class="step-desc">${step.desc}</p>
+        </div>
+      `;
+      aiTransitSteps.appendChild(div);
+    });
+
+    aiPlaceHours.textContent = data.hours;
+    aiPlaceTip.textContent = data.tip;
+
+    aiPlaceholderState.classList.add('hidden');
+    aiResultPanel.classList.remove('hidden');
+    aiAddFeedback.classList.add('hidden');
+  }
+
+  // Handle Natural Query Search
+  function handleAiQuery(query) {
+    const q = query.toLowerCase().trim();
+    if (!q) return;
+
+    // Search keywords matching
+    let bestMatchKey = 'elephant-mountain';
+
+    if (q.includes('jiufen') || q.includes('lantern') || q.includes('teahouse') || q.includes('ruifang')) {
+      bestMatchKey = 'jiufen';
+    } else if (q.includes('101') || q.includes('observatory') || q.includes('tower') || q.includes('skyscraper')) {
+      bestMatchKey = 'taipei-101';
+    } else if (q.includes('daxi') || q.includes('tofu') || q.includes('baroque')) {
+      bestMatchKey = 'daxi';
+    } else if (q.includes('xpark') || q.includes('aquarium') || q.includes('penguin') || q.includes('gloria')) {
+      bestMatchKey = 'xpark';
+    } else if (q.includes('hutou') || q.includes('tiger') || q.includes('sunset park')) {
+      bestMatchKey = 'hutoushan';
+    } else if (q.includes('zhongli') || q.includes('night market') && q.includes('local')) {
+      bestMatchKey = 'zhongli-night-market';
+    } else if (q.includes('dongyan') || q.includes('forest') || q.includes('cedar') || q.includes('mountain hike')) {
+      bestMatchKey = 'dongyanshan';
+    } else if (q.includes('shilin') || q.includes('chicken cutlet')) {
+      bestMatchKey = 'shilin-night-market';
+    } else if (q.includes('sun moon') || q.includes('lake') || q.includes('cable car')) {
+      bestMatchKey = 'sun-moon-lake';
+    } else if (q.includes('hike') || q.includes('trail') || q.includes('view') || q.includes('elephant')) {
+      bestMatchKey = 'elephant-mountain';
+    }
+
+    renderAiDestination(bestMatchKey);
+  }
+
+  // Add AI recommended place to itinerary
+  async function addAiPlanToItinerary() {
+    if (!activeAiDestination) return;
+
+    const selectedDate = aiAddDateSelect.value;
+    if (!selectedDate) return;
+
+    const datePlans = plans[selectedDate] || [];
+
+    const planData = {
+      id: Date.now(),
+      location: activeAiDestination.title,
+      category: activeAiDestination.category,
+      desc: `${activeAiDestination.subtitle} | Transit: ${activeAiDestination.transitCost} (${activeAiDestination.steps[0].title} -> ${activeAiDestination.steps[activeAiDestination.steps.length-1].title}) | Entrance: ${activeAiDestination.entranceCost} | Est Total: ${activeAiDestination.totalCost}`,
+      time: '09:30',
+      author: 'AI Travel Assistant',
+      address: activeAiDestination.address,
+      lat: activeAiDestination.lat,
+      lng: activeAiDestination.lng,
+      createdAt: Date.now()
+    };
+
+    datePlans.push(planData);
+    plans[selectedDate] = datePlans;
+
+    savePlansLocal();
+
+    try {
+      await setDoc(doc(db, "plans", selectedDate), { items: datePlans });
+    } catch (e) {
+      console.error("Error adding AI plan to Firestore:", e);
+    }
+
+    renderCalendar();
+    renderItinerary();
+    updateMapMarkers();
+
+    aiAddFeedback.classList.remove('hidden');
+    setTimeout(() => {
+      aiAddFeedback.classList.add('hidden');
+    }, 4000);
+  }
+
+  // Bind AI Assistant events
+  if (btnOpenAiHeader) btnOpenAiHeader.addEventListener('click', openAiModal);
+  if (btnFloatingAi) btnFloatingAi.addEventListener('click', openAiModal);
+  if (btnCloseAiModal) btnCloseAiModal.addEventListener('click', closeAiModal);
+  if (aiModal) {
+    aiModal.addEventListener('click', (e) => {
+      if (e.target === aiModal) closeAiModal();
+    });
+  }
+
+  if (aiPresetChips) {
+    aiPresetChips.addEventListener('click', (e) => {
+      const chip = e.target.closest('.ai-chip');
+      if (chip && chip.dataset.dest) {
+        renderAiDestination(chip.dataset.dest);
+      }
+    });
+  }
+
+  if (aiSearchForm) {
+    aiSearchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleAiQuery(aiQueryInput.value);
+    });
+  }
+
+  if (btnAddAiPlan) {
+    btnAddAiPlan.addEventListener('click', addAiPlanToItinerary);
+  }
+
+  // Init Map & Realtime Sync
   initMap();
   startRealtimeSync();
 });
+
