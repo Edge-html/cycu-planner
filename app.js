@@ -1007,6 +1007,66 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function getAiDetailsForLocation(locationName, category) {
+    const locLower = (locationName || '').toLowerCase();
+    
+    // Check direct matching in predefined AI destinations
+    for (const key of Object.keys(AI_DESTINATIONS)) {
+      const dest = AI_DESTINATIONS[key];
+      if (locLower.includes(dest.title.toLowerCase()) || locLower.includes(key.replace('-', ' '))) {
+        return dest;
+      }
+    }
+
+    // Keyword matching
+    if (locLower.includes('jiufen') || locLower.includes('ruifang')) return AI_DESTINATIONS['jiufen'];
+    if (locLower.includes('101') || locLower.includes('tower')) return AI_DESTINATIONS['taipei-101'];
+    if (locLower.includes('daxi')) return AI_DESTINATIONS['daxi'];
+    if (locLower.includes('xpark') || locLower.includes('aquarium')) return AI_DESTINATIONS['xpark'];
+    if (locLower.includes('hutou') || locLower.includes('tiger')) return AI_DESTINATIONS['hutoushan'];
+    if (locLower.includes('night market') && locLower.includes('zhongli')) return AI_DESTINATIONS['zhongli-night-market'];
+    if (locLower.includes('dongyan') || locLower.includes('cedar')) return AI_DESTINATIONS['dongyanshan'];
+    if (locLower.includes('shilin')) return AI_DESTINATIONS['shilin-night-market'];
+    if (locLower.includes('sun moon')) return AI_DESTINATIONS['sun-moon-lake'];
+    if (locLower.includes('elephant') || locLower.includes('xiangshan')) return AI_DESTINATIONS['elephant-mountain'];
+
+    // Dynamic AI summary fallback for custom locations
+    let defaultImg = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80';
+    if (category === 'academic' || locLower.includes('cycu') || locLower.includes('dorm') || locLower.includes('ee')) {
+      defaultImg = 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=600&q=80';
+    } else if (category === 'food' || locLower.includes('market') || locLower.includes('food')) {
+      defaultImg = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80';
+    } else if (category === 'roam' || locLower.includes('park') || locLower.includes('lake') || locLower.includes('mountain')) {
+      defaultImg = 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80';
+    }
+
+    const isTaipei = locLower.includes('taipei') || locLower.includes('shilin') || locLower.includes('xinyi');
+    const transitFare = isTaipei ? 'NT$ 82' : 'NT$ 18 - 36';
+    const stepsList = isTaipei ? [
+      { title: 'Zhongli Station to Taipei Main Station', icon: '🚆', desc: 'Take TRA Express Train (~40 mins)', fare: 'NT$ 57' },
+      { title: 'Taipei Metro MRT Connection', icon: '🚇', desc: 'Transfer to Taipei Metro MRT line to destination', fare: 'NT$ 25' }
+    ] : [
+      { title: 'CYCU Campus to Destination', icon: '🚌', desc: 'Ride YouBike (~10 mins) or Taoyuan Bus 155/156 (~15 mins)', fare: 'NT$ 18' },
+      { title: 'Arrive at Location', icon: '📍', desc: `Explore ${locationName}`, fare: 'FREE' }
+    ];
+
+    return {
+      id: 'custom-' + Date.now(),
+      title: locationName,
+      subtitle: `CYCU Weekend Spot & Activity in ${isTaipei ? 'Taipei' : 'Taoyuan'}`,
+      category: category || 'sightseeing',
+      region: isTaipei ? 'Taipei' : 'Taoyuan / Zhongli',
+      image: defaultImg,
+      transitCost: transitFare,
+      entranceCost: 'FREE',
+      foodCost: '~NT$ 200',
+      totalCost: isTaipei ? 'NT$ 282' : 'NT$ 218',
+      steps: stepsList,
+      hours: 'Open daily',
+      tip: `Convenient spot near CYCU campus. Easy to combine with nearby street food & sightseeing!`
+    };
+  }
+
   function updateMapMarkers() {
     // Clear old markers
     markers.forEach(m => map.removeLayer(m));
@@ -1022,16 +1082,58 @@ document.addEventListener('DOMContentLoaded', () => {
           const dateStr = formatDateDisplay(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
           const timeStr = plan.time ? ` at ${to12h(plan.time)}` : '';
 
+          const aiDetails = getAiDetailsForLocation(plan.location, plan.category);
+
           const marker = L.marker([plan.lat, plan.lng], {
             icon: createCustomIcon(plan.category)
           }).addTo(map);
 
-          marker.bindPopup(`
-            <div class="popup-title">${plan.location}</div>
-            <div class="popup-date">${dateStr}${timeStr}</div>
-            ${plan.desc ? `<div class="popup-desc">${plan.desc}</div>` : ''}
-            <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">Suggested by ${plan.author}</div>
-          `);
+          const popupContent = `
+            <div class="map-popup-card">
+              <div class="map-popup-img-wrap">
+                <img src="${aiDetails.image}" alt="${plan.location}" class="map-popup-img" onerror="this.style.display='none'">
+                <span class="map-popup-cat">${plan.category || 'sightseeing'}</span>
+              </div>
+              <div class="map-popup-body">
+                <div class="popup-title">${plan.location}</div>
+                <div class="popup-date">${dateStr}${timeStr}</div>
+                ${plan.desc ? `<div class="popup-desc">${plan.desc}</div>` : ''}
+                
+                <!-- AI Summary Badges -->
+                <div class="popup-ai-pills">
+                  <span class="popup-pill fare">🚌 Transit: ${aiDetails.transitCost}</span>
+                  <span class="popup-pill ticket">🎟️ Entrance: ${aiDetails.entranceCost}</span>
+                  <span class="popup-pill total">💰 Total: ${aiDetails.totalCost}</span>
+                </div>
+
+                <!-- AI Quick Route Preview -->
+                <div class="popup-ai-route">
+                  <strong>🚆 Train/Bus Route:</strong> ${aiDetails.steps[0].title} → ${aiDetails.steps[aiDetails.steps.length-1].title}
+                </div>
+
+                <button type="button" class="btn-popup-ai" data-loc="${encodeURIComponent(plan.location)}">
+                  🤖 Open Full AI Travel Guide & Route
+                </button>
+              </div>
+            </div>
+          `;
+
+          marker.bindPopup(popupContent, { maxWidth: 300 });
+
+          // Auto open AI modal when user clicks "Open Full AI Travel Guide" inside popup
+          marker.on('popupopen', () => {
+            const popupElement = marker.getPopup().getElement();
+            if (popupElement) {
+              const aiBtn = popupElement.querySelector('.btn-popup-ai');
+              if (aiBtn) {
+                aiBtn.addEventListener('click', () => {
+                  const loc = decodeURIComponent(aiBtn.dataset.loc);
+                  handleAiQuery(loc);
+                  openAiModal();
+                });
+              }
+            }
+          });
 
           markers.push(marker);
           count++;
