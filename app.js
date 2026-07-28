@@ -1007,7 +1007,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function getAiDetailsForLocation(locationName, category) {
+  function getAiDetailsForLocation(locationName, category, lat, lng) {
     const locLower = (locationName || '').toLowerCase();
     
     // Check direct matching in predefined AI destinations
@@ -1030,15 +1030,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (locLower.includes('sun moon')) return AI_DESTINATIONS['sun-moon-lake'];
     if (locLower.includes('elephant') || locLower.includes('xiangshan')) return AI_DESTINATIONS['elephant-mountain'];
 
-    // Dynamic AI summary fallback for custom locations
-    let defaultImg = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80';
-    if (category === 'academic' || locLower.includes('cycu') || locLower.includes('dorm') || locLower.includes('ee')) {
-      defaultImg = 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=600&q=80';
-    } else if (category === 'food' || locLower.includes('market') || locLower.includes('food')) {
-      defaultImg = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80';
-    } else if (category === 'roam' || locLower.includes('park') || locLower.includes('lake') || locLower.includes('mountain')) {
-      defaultImg = 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80';
-    }
+    // Dynamic Google Maps Satellite/Map snapshot for custom locations
+    let defaultImg = getGoogleMapsPlaceImage(locationName, lat, lng, category);
 
     const isTaipei = locLower.includes('taipei') || locLower.includes('shilin') || locLower.includes('xinyi');
     const transitFare = isTaipei ? 'NT$ 82' : 'NT$ 18 - 36';
@@ -1057,6 +1050,8 @@ document.addEventListener('DOMContentLoaded', () => {
       category: category || 'sightseeing',
       region: isTaipei ? 'Taipei' : 'Taoyuan / Zhongli',
       image: defaultImg,
+      lat: lat || 24.9576,
+      lng: lng || 121.2407,
       transitCost: transitFare,
       entranceCost: 'FREE',
       foodCost: '~NT$ 200',
@@ -1082,7 +1077,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const dateStr = formatDateDisplay(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
           const timeStr = plan.time ? ` at ${to12h(plan.time)}` : '';
 
-          const aiDetails = getAiDetailsForLocation(plan.location, plan.category);
+          const aiDetails = getAiDetailsForLocation(plan.location, plan.category, plan.lat, plan.lng);
 
           const marker = L.marker([plan.lat, plan.lng], {
             icon: createCustomIcon(plan.category)
@@ -1249,6 +1244,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Helper to generate dynamic Google Maps Satellite/Roadmap image for any lat/lng
+  function getGoogleMapsPlaceImage(locationName, lat, lng, category) {
+    if (lat && lng) {
+      // Dynamic Google Maps Satellite + Street Hybrid View static image snapshot
+      return `https://static-maps.yandex.ru/1.x/?l=sat,skl&ll=${lng},${lat}&z=17&size=600,350&pt=${lng},${lat},pm2rdm`;
+    }
+    return 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Zhongli_Night_Market_2020.jpg/1200px-Zhongli_Night_Market_2020.jpg';
+  }
+
   // ==========================================================================
   // AI TRAVEL & TRANSIT ASSISTANT MODULE
   // ==========================================================================
@@ -1259,7 +1263,7 @@ document.addEventListener('DOMContentLoaded', () => {
       subtitle: 'Iconic Taipei 101 skyline panorama & urban forest hike',
       category: 'sightseeing',
       region: 'Taipei City',
-      image: 'https://images.unsplash.com/photo-1543158011-4f02626b96e7?auto=format&fit=crop&w=1000&q=80',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Taipei_101_from_Elephant_Mountain_2016.jpg/1200px-Taipei_101_from_Elephant_Mountain_2016.jpg',
       lat: 25.0274,
       lng: 121.5707,
       address: 'Xiangshan Trail, Xinyi District, Taipei City',
@@ -1282,7 +1286,7 @@ document.addEventListener('DOMContentLoaded', () => {
       subtitle: 'Atmospheric lantern-lit mountain village overlooking the sea',
       category: 'sightseeing',
       region: 'New Taipei City',
-      image: 'https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=1000&q=80',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Jiufen_Taiwan_Shuqi-Road-01.jpg/1200px-Jiufen_Taiwan_Shuqi-Road-01.jpg',
       lat: 25.1099,
       lng: 121.8452,
       address: 'Jishan Street, Ruifang District, New Taipei City',
@@ -1304,7 +1308,7 @@ document.addEventListener('DOMContentLoaded', () => {
       subtitle: 'World-famous 508m skyscraper & 89th floor indoor/outdoor observation deck',
       category: 'sightseeing',
       region: 'Taipei City',
-      image: 'https://images.unsplash.com/photo-1508248467877-aed32a209749?auto=format&fit=crop&w=1000&q=80',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Taipei_101_2009.jpg/1200px-Taipei_101_2009.jpg',
       lat: 25.0339,
       lng: 121.5645,
       address: 'No. 7, Section 5, Xinyi Road, Xinyi District, Taipei City',
@@ -1326,7 +1330,7 @@ document.addEventListener('DOMContentLoaded', () => {
       subtitle: 'Historic Japanese-colonial era carved storefronts & river park',
       category: 'roam',
       region: 'Taoyuan City',
-      image: 'https://images.unsplash.com/photo-1571401835393-8c5f35328320?auto=format&fit=crop&w=1000&q=80',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Daxi_Old_Street_Heping_Road_20180721.jpg/1200px-Daxi_Old_Street_Heping_Road_20180721.jpg',
       lat: 24.8837,
       lng: 121.2869,
       address: 'Heping Road, Daxi District, Taoyuan City',
@@ -1391,7 +1395,7 @@ document.addEventListener('DOMContentLoaded', () => {
       subtitle: '700m feast street packed with 400+ savory Taiwan street food stalls',
       category: 'food',
       region: 'Zhongli District',
-      image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1000&q=80',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Zhongli_Night_Market_2020.jpg/1200px-Zhongli_Night_Market_2020.jpg',
       lat: 24.9608,
       lng: 121.2152,
       address: 'Xinming Road, Zhongli District, Taoyuan City',
@@ -1434,7 +1438,7 @@ document.addEventListener('DOMContentLoaded', () => {
       subtitle: 'Taipei’s most legendary night market with neon arcades & street eats',
       category: 'food',
       region: 'Taipei City',
-      image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=1000&q=80',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Shilin_Night_Market_Entrance.jpg/1200px-Shilin_Night_Market_Entrance.jpg',
       lat: 25.0888,
       lng: 121.5241,
       address: 'Jihe Road & Wenlin Road, Shilin District, Taipei City',
@@ -1456,7 +1460,7 @@ document.addEventListener('DOMContentLoaded', () => {
       subtitle: 'World-famous emerald alpine lake, lakeside cycling & cable car views',
       category: 'sightseeing',
       region: 'Nantou County',
-      image: 'https://images.unsplash.com/photo-1527684651001-731c474bbb5a?auto=format&fit=crop&w=1000&q=80',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Sun_Moon_Lake_Lalu_Island_2017.jpg/1200px-Sun_Moon_Lake_Lalu_Island_2017.jpg',
       lat: 23.8523,
       lng: 120.9150,
       address: 'Shuishe Pier, Yuchi Township, Nantou County',
